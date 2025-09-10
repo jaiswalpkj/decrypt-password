@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Decrypt Password</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 40px;">
+  <h2>Password Decryption</h2>
+  
+  <form id="decryptForm">
+    <label for="encryptedInput">Enter Encrypted Password (Base64):</label><br>
+    <textarea id="encryptedInput" rows="3" cols="60"></textarea><br><br>
+    <button type="submit">Decrypt</button>
+  </form>
+
+  <h3>Decrypted Password:</h3>
+  <p id="decryptedOutput" style="font-weight: bold; color: green;"></p>
+
+  <script>
+    // ✅ Fixed secret key from your Angular code
+    const secretKey = "N*foyr$jpHKq@97d8l3!ZgXi";
+
+    function decryptData(cipherText) {
+      const rawData = CryptoJS.enc.Base64.parse(cipherText);
+
+      // Extract IV (first 16 bytes = 128 bits)
+      const iv = CryptoJS.lib.WordArray.create(rawData.words.slice(0, 4), 16);
+
+      // Extract actual ciphertext (remaining bytes)
+      const encrypted = CryptoJS.lib.WordArray.create(
+        rawData.words.slice(4),
+        rawData.sigBytes - 16
+      );
+
+      const key = CryptoJS.enc.Utf8.parse(secretKey);
+
+      const decrypted = CryptoJS.AES.decrypt(
+        { ciphertext: encrypted },
+        key,
+        { iv, mode: CryptoJS.mode.CBC }
+      );
+
+      return decrypted.toString(CryptoJS.enc.Utf8);
+    }
+
+    document.getElementById("decryptForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const encryptedText = document.getElementById("encryptedInput").value.trim();
+      try {
+        const decrypted = decryptData(encryptedText);
+        document.getElementById("decryptedOutput").textContent =
+          decrypted || "⚠️ Invalid Cipher Text or Wrong Key!";
+      } catch (err) {
+        document.getElementById("decryptedOutput").textContent = "❌ Error during decryption!";
+      }
+    });
+  </script>
+</body>
+</html>
